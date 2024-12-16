@@ -6,8 +6,9 @@ authors = ["Minh Le <vietminhle98@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "3.13.1"
 click = "^8.1.7"
+pyinstaller = "^6.11.1"
 
 
 [build-system]
