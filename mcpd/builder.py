@@ -1,9 +1,11 @@
-from typing import Protocol
-from pydantic import BaseModel
+from typing import Protocol, Optional
+from pydantic import BaseModel, Field
 
 
 class BuildSpec(BaseModel):
-    github_repo: str
+    name: str
+    tag: Optional[str] = Field(..., default="latest")
+    dockerfile_content: str
 
 
 class Builder(Protocol):
