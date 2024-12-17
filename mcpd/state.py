@@ -10,7 +10,7 @@ class McpServerStatus(str, Enum):
 
 class McpServer(BaseModel):
     id: str
-    image_tag: str
+    docker_image: str
     status: McpServerStatus
     env: dict[str, str]
 
