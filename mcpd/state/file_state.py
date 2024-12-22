@@ -61,7 +61,9 @@ class FileStateManager(StateManager):
             with open(self.state_file, "r") as f:
                 data = json.load(f)
                 return ServersState.model_validate(data)
-        except (json.JSONDecodeError, FileNotFoundError):
+        except json.JSONDecodeError:
+            raise Exception(f"Failed to deserialize state file at {self.state_file}")
+        except FileNotFoundError:
             self._maybe_init_state()
             return DEFAULT_SERVERS_STATE
 
