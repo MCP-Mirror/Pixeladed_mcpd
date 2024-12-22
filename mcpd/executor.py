@@ -78,7 +78,7 @@ class DockerExecutor:
             package=spec.package,
             docker_image_id=spec.docker_image_id,
             container_id=container.id,
-            status=McpServerStatus.STOPPED,
+            status=McpServerStatus.CREATED,
             env=spec.env,
         )
 

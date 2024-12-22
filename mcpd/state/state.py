@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 
 class McpServerStatus(str, Enum):
+    CREATED = "created"
     RUNNING = "running"
     STOPPED = "stopped"
 
