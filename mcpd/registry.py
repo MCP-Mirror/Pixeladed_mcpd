@@ -2,7 +2,7 @@ from typing import Protocol, Optional
 from pydantic import BaseModel
 
 
-class MCPServerSpec(BaseModel):
+class MCPPackage(BaseModel):
     name: str
     github_repo: Optional[str]
     default_dockerfile_content: Optional[str]
@@ -10,6 +10,10 @@ class MCPServerSpec(BaseModel):
 
 
 class Registry(Protocol):
-    def get(self, name: str) -> MCPServerSpec: ...
-    def lookup_github_repo(self, repo: str) -> Optional[MCPServerSpec]: ...
-    def search(self, query: str) -> list[MCPServerSpec]: ...
+    """
+    A registry of MCP packages, how to find and retrieve them. It is not responsible for installing them.
+    """
+
+    def get(self, name: str) -> MCPPackage: ...
+    def lookup_github_repo(self, repo: str) -> Optional[MCPPackage]: ...
+    def search(self, query: str) -> list[MCPPackage]: ...
