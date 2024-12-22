@@ -5,12 +5,12 @@ from typing import Optional
 from platformdirs import user_data_dir
 
 from mcpd.config import APP_NAME, APP_AUTHOR
-from .state import McpServer, StateManager
+from .state import Server, StateManager
 from pydantic import BaseModel
 
 
 class ServersState(BaseModel):
-    servers: dict[str, McpServer]
+    servers: dict[str, Server]
 
 
 SERVERS_FILE = "servers.json"
@@ -38,13 +38,13 @@ class FileStateManager(StateManager):
         with open(self.state_file, "w") as f:
             json.dump(state.model_dump(), f, indent=2)
 
-    def list(self) -> list[McpServer]:
+    def list(self) -> list[Server]:
         return list(self._load_state().servers.values())
 
-    def get(self, name: str) -> Optional[McpServer]:
+    def get(self, name: str) -> Optional[Server]:
         return self._load_state().servers.get(name)
 
-    def set(self, name: str, server: McpServer) -> None:
+    def set(self, name: str, server: Server) -> None:
         state = self._load_state()
         state.servers[name] = server
         self._save_state(state)

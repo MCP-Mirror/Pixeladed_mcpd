@@ -1,12 +1,12 @@
 from typing import Protocol, Optional
-from mcpd.state import McpServer, StateManager, McpServerStatus
+from mcpd.state import Server, StateManager, ServerStatus
 from pydantic import BaseModel
 import io
 import docker
 from docker import DockerClient
 
 
-class MCPServerSpec(BaseModel):
+class ServerSpec(BaseModel):
     """
     A specificaiton for an MCP server that can be run by an executor.
     """
@@ -18,23 +18,19 @@ class MCPServerSpec(BaseModel):
 
 
 class Executor(Protocol):
-    def create_and_run(
-        self, spec: MCPServerSpec, server_name: Optional[str]
-    ) -> McpServer:
+    def create_and_run(self, spec: ServerSpec, server_name: Optional[str]) -> Server:
         """Run an MCP server with the given specification and environment variables"""
         ...
 
-    def create(
-        self, spec: MCPServerSpec, server_name: Optional[str] = None
-    ) -> McpServer:
+    def create(self, spec: ServerSpec, server_name: Optional[str] = None) -> Server:
         """Create a stopped MCP server. You must call run() to start it."""
         ...
 
-    def stop(self, server_name: str) -> McpServer:
+    def stop(self, server_name: str) -> Server:
         """Stop the MCP server with the given name"""
         ...
 
-    def run(self, server_name: str) -> McpServer:
+    def run(self, server_name: str) -> Server:
         """Run the MCP server with the given name"""
         ...
 
@@ -52,14 +48,12 @@ class DockerExecutor:
         self.state = state_manager
 
     def create_and_run(
-        self, spec: MCPServerSpec, server_name: Optional[str] = None
-    ) -> McpServer:
+        self, spec: ServerSpec, server_name: Optional[str] = None
+    ) -> Server:
         server = self.create(spec, server_name)
         return self.run(server.name)
 
-    def create(
-        self, spec: MCPServerSpec, server_name: Optional[str] = None
-    ) -> McpServer:
+    def create(self, spec: ServerSpec, server_name: Optional[str] = None) -> Server:
         name = server_name or spec.name
 
         if self.state.get(name) is not None:
@@ -76,19 +70,19 @@ class DockerExecutor:
             image=image.id, name=name, environment=spec.env, detach=True
         )
 
-        server = McpServer(
+        server = Server(
             name=name,
             package=spec.package,
             docker_image_id=spec.docker_image_id,
             container_id=container.id,
-            status=McpServerStatus.CREATED,
+            status=ServerStatus.CREATED,
             env=spec.env,
         )
 
         self.state.set(name, server)
         return server
 
-    def stop(self, server_name: str) -> McpServer:
+    def stop(self, server_name: str) -> Server:
         server = self.state.get(server_name)
         if server is None:
             raise ValueError(f"Server {server_name} not found")
@@ -96,11 +90,11 @@ class DockerExecutor:
         container = self.client.containers.get(server.container_id)
         container.stop()
 
-        server.status = McpServerStatus.STOPPED
+        server.status = ServerStatus.STOPPED
         self.state.set(server_name, server)
         return server
 
-    def run(self, server_name: str) -> McpServer:
+    def run(self, server_name: str) -> Server:
         server = self.state.get(server_name)
         if server is None:
             raise ValueError(f"Server {server_name} not found")
@@ -108,7 +102,7 @@ class DockerExecutor:
         container = self.client.containers.get(server.container_id)
         container.start()
 
-        server.status = McpServerStatus.RUNNING
+        server.status = ServerStatus.RUNNING
         self.state.set(server_name, server)
         return server
 
