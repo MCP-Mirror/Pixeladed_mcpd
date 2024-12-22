@@ -39,7 +39,10 @@ class Executor(Protocol):
         ...
 
     def connect_stdio(self, server_name: str) -> tuple[io.TextIO, io.TextIO]:
-        """Connect to the stdin and stdout of the MCP server with the given name"""
+        """
+        Connect to the stdin and stdout of the MCP server with the given name.
+        Returns a tuple (stdin, stdout) where stdin is a writable stream and stdout is a readable stream.
+        """
         ...
 
 
