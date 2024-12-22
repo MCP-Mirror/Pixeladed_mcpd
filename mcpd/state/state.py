@@ -11,7 +11,8 @@ class McpServerStatus(str, Enum):
 class McpServer(BaseModel):
     name: str
     package: str
-    docker_image: str
+    docker_image_id: str
+    container_id: str
     status: McpServerStatus
     env: dict[str, str]
 
@@ -23,4 +24,3 @@ class StateManager(Protocol):
     def get(self, name: str) -> Optional[McpServer]: ...
     def set(self, name: str, server: McpServer) -> None: ...
     def delete(self, name: str) -> None: ...
-
