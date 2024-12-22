@@ -11,6 +11,7 @@ click = "^8.1.7"
 pyinstaller = "^6.11.1"
 pydantic = "^2.10.4"
 platformdirs = "^4.3.6"
+docker = "^7.1.0"
 
 
 [build-system]
