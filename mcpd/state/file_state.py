@@ -6,8 +6,15 @@ from platformdirs import user_data_dir
 
 from mcpd.config import APP_NAME, APP_AUTHOR
 from .state import McpServer, StateManager
+from pydantic import BaseModel
+
+
+class ServersState(BaseModel):
+    servers: dict[str, McpServer]
+
 
 SERVERS_FILE = "servers.json"
+DEFAULT_SERVERS_STATE = ServersState(servers={})
 
 
 class FileStateManager(StateManager):
@@ -18,51 +25,47 @@ class FileStateManager(StateManager):
         """Create a FileStateManager from the user's data directory."""
         data_dir = Path(user_data_dir(APP_NAME, APP_AUTHOR))
         return cls(data_dir)
-    
+
     def __init__(self, data_dir: Path | str):
         data_dir = Path(data_dir)
         data_dir.mkdir(parents=True, exist_ok=True)
-        
-        self.state_file = data_dir / SERVERS_FILE
-        
-        # Initialize empty state file if it doesn't exist
-        if not self.state_file.exists():
-            self._save_state({})
-    
-    def _load_state(self) -> dict[str, McpServer]:
-        """Load the state from disk."""
-        try:
-            with open(self.state_file, 'r') as f:
-                data = json.load(f)
-                return {
-                    name: McpServer.model_validate(server_data)
-                    for name, server_data in data.items()
-                }
-        except (json.JSONDecodeError, FileNotFoundError):
-            return {}
 
-    def _save_state(self, state: dict[str, McpServer]) -> None:
+        self.state_file = data_dir / SERVERS_FILE
+        self._maybe_init_state()
+
+    def _save_state(self, state: ServersState) -> None:
         """Save the state to disk."""
-        with open(self.state_file, 'w') as f:
-            json.dump(
-                {name: server.model_dump() for name, server in state.items()},
-                f,
-                indent=2
-            )
+        with open(self.state_file, "w") as f:
+            json.dump(state.model_dump(), f, indent=2)
 
     def list(self) -> list[McpServer]:
-        return list(self._load_state().values())
+        return list(self._load_state().servers.values())
 
     def get(self, name: str) -> Optional[McpServer]:
-        return self._load_state().get(name)
+        return self._load_state().servers.get(name)
 
     def set(self, name: str, server: McpServer) -> None:
         state = self._load_state()
-        state[name] = server
+        state.servers[name] = server
         self._save_state(state)
 
     def delete(self, name: str) -> None:
         state = self._load_state()
-        if name in state:
-            del state[name]
-            self._save_state(state) 
+        if name in state.servers:
+            del state.servers[name]
+            self._save_state(state)
+
+    def _load_state(self) -> ServersState:
+        """Load the state from disk."""
+        try:
+            with open(self.state_file, "r") as f:
+                data = json.load(f)
+                return ServersState.model_validate(data)
+        except (json.JSONDecodeError, FileNotFoundError):
+            self._maybe_init_state()
+            return DEFAULT_SERVERS_STATE
+
+    def _maybe_init_state(self) -> None:
+        """Initialize empty state file if it doesn't exist."""
+        if not self.state_file.exists():
+            self._save_state(DEFAULT_SERVERS_STATE)
